@@ -1,0 +1,5 @@
+9d50b7bc45ee65b54f9664cb4622e375  lib/systemd/system/pppoe-server@.service
+bb258969f25152fdfb0e9602820c5361  usr/sbin/pppoe-server-start
+71f1bab2c43a2e4d7fb6282f0b13acb4  usr/share/doc/pppoe-server/README
+cdabde5d06965d3b7a572e9e1e89d99d  usr/share/doc/pppoe-server/changelog.gz
+f4bf4cb06af1c6487b498ea3fa4392f4  usr/share/doc/pppoe-server/copyright

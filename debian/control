@@ -1,0 +1,16 @@
+Source: pppoe-server
+Section: admin
+Priority: optional
+Maintainer: Adrian Ban <adrian@abtelecom.ro>
+Build-Depends: debhelper (>= 7.0.50~), dh-systemd, po-debconf
+Standards-Version: 3.9.6
+Vcs-Browser: https://github.com/AdrianBan/pppoe-server/
+Vcs-Git: git://github.com/AdrianBan/pppoe-server
+
+Package: pppoe-server
+Architecture: all
+Depends: systemd, pppoe, ${misc:Depends}
+Description: boot-time loader for starting PPPoE-Server via systemd
+ This package provides a loader for starting PPPoE-Server using
+ systemd architecture. It loads and unloads the PPPoE-Server.
+

@@ -1,0 +1,14 @@
+[Unit]
+Description=PPPoE-Server for device %I
+Wants=network-pre.target
+After=local-fs.target network-pre.target systemd-sysctl.service systemd-modules-load.service network.target networking.target
+
+[Install]
+WantedBy=network.target
+
+[Service]
+ExecStart=/usr/sbin/pppoe-server-start %i start
+ExecStopPost=/usr/sbin/pppoe-server-start %i stop
+Restart=on-failure
+RestartPreventExitStatus=1
+

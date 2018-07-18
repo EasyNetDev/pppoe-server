@@ -1,0 +1,11 @@
+Package: pppoe-server
+Version: 0.4
+Architecture: all
+Maintainer: Adrian Ban <adrian@abtelecom.ro>
+Installed-Size: 26
+Depends: systemd, pppoe
+Section: admin
+Priority: optional
+Description: boot-time loader for starting PPPoE-Server via systemd
+ This package provides a loader for starting PPPoE-Server using
+ systemd architecture. It loads and unloads the PPPoE-Server.

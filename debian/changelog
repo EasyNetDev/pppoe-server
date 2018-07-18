@@ -1,0 +1,31 @@
+pppoe-server (0.4) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix the service to correctly start at boot.
+
+ -- Adrian Ban <adrian@abtelecom.ro>  Wed, 18 Jul 2018 00:36:12 +0200
+
+pppoe-server (0.3) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Changing lock system from lockfile to flock to be more portable
+    between systems and to not depend on procmail.
+
+ -- Adrian Ban <adrian@abtelecom.ro>  Wed, 18 Jul 2018 00:14:34 +0200
+
+pppoe-server (0.2) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Changed the script to start the daemon after building the parameters
+  * Renamed the script to pppoe-server-start
+  * Updated the service
+  * Adding lock file to prevent paralel execution to get same session ID
+
+ -- Adrian Ban <adrian@abtelecom.ro>  Tue, 17 Jul 2018 16:12:34 +0200
+
+pppoe-server (0.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * First release.
+
+ -- Adrian Ban <adrian@abtelecom.ro>  Tue, 17 Jul 2018 11:06:34 +0200

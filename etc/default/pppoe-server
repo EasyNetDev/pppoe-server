@@ -1,0 +1,90 @@
+#
+# This is general configuration file for starting the PPPoE Sever
+#
+
+# Specify an ID for this server. If you want to force connection to a specific
+# PPPoE server you must specific this ID to client. Even client doesn't have
+# this specific ID, server will serve normal connections.
+#
+# Type: string
+# Default: None
+#
+# Examples: PPPoE_ID="PPPoE"
+#           PPPoE_ID="MyServer PPPoE0"
+#           PPPoE_ID=""
+#
+#PPPoE_ID="MyNetwork"
+PPPOE_ID=""
+
+# Allows at most num concurrent PPPoE sessions.  If not specified, the default is 64.
+# Because the PPPoE Server is started on each interface this mean this paramenter
+# will limit the number of concurrent PPPoE sessions on that interface.
+#
+# Type: integer
+# Default: 64
+# Examples: PPPOE_SESSIONS=128
+#
+PPPOE_SESSIONS=256
+
+# Maximum number of PPPoE servers running on this machine. This will limit the number of
+# PPPoE daemons which will run on this machine. The script will generate a list of sessions
+# and if you try to start more daemons, the script will not find any free sessions.
+#
+# Type: integer
+# Default: 64
+# Example: PPPOE_MAX=128
+#
+PPPOE_NUM=128
+
+# Specify an alternate pppd configuration file. Default is /etc/ppp/pppoe-server-options.
+# This option causes pppoe-server to tell pppd to use the option file fname instead of the  default
+# /etc/ppp/pppoe-server-options.
+#
+# Type: string
+# Default: /etc/ppp/pppoe-server-options
+#
+# Examples: PPPOE_config="/etc/ppp/mypppoe-server.conf"
+#
+PPPOE_CONFIG=""
+
+# Sets  the  local  IP  address.   This is passed to spawned pppd processes.  If not specified, the
+# default is 10.0.0.1.
+#
+# Type: IP
+# Default: 10.0.0.1
+#			    
+# Examples: PPPOE_LOCALIP="192.168.0.1"
+#
+PPPOE_LOCALIP="10.245.244.1"
+
+# Sets the starting remote IP address.  As sessions are established, IP addresses are assigned starting  from
+# ip.    pppoe-server automatically keeps track of the pool of addresses and passes a valid remote IP address
+# to pppd.  If not specified, a starting address of 10.67.15.1 is used.
+#
+# Useless if you use radius backand and set IP via radius.
+#
+# Type: IP
+# Default: 10.67.15.1
+#
+# Examples: PPPOE_LOCALIP="192.168.100.1"
+#
+PPPOE_REMOTEIP="10.150.0.0"
+
+# Specifies which name to report as the access concentrator name.  If not supplied, the host name is used.
+# The name must be present in hosts for pppoe-server to get the IP and set it to NAS IP
+#
+# Type: string
+# Default: None
+#
+#PPPOE_AC_NAME="My PPPoE"
+
+# Use kernel mode. If you have kernel 2.4.0 or later and your kernel has pppoe and pppox module, say yes here
+# Will reduce dramaticaly CPU usage on high traffic. You must compile the kernel with PPPoE support
+# If is set to "auto" the script will check the help output of the pppoe-server command and tries to find out
+# if the pppoe-server has the "-k" option. If it has will add it to the command line arguments when the 
+# pppoe-server.service will starts.
+#
+# Type: yes|no|auto
+# Default: None
+# 
+PPPOE_KERNELMODE="auto"

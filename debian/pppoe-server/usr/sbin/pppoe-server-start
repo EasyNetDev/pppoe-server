@@ -1,0 +1,192 @@
+#!/bin/bash
+
+#   This script is creating a file to keep the sessions of PPPoE
+#   First if /var/run/pppoe-server/ folder doens't exist will
+# create it and then will create a file pppoe-server.ses file.
+#   The script will generate the list of sessions taking in account
+# the maximum sessions per daemon.
+#   The will generate an eviroment file for each interface before
+#  pppoe-server.service starts the daemon.
+
+. /etc/default/pppoe-server
+
+VAR_DIR="/var/run/pppoe-server"
+SES_FILE="$VAR_DIR/pppoe-server.ses"
+
+PPPOE_NUM=$(( $PPPOE_NUM * 1 ))
+PPPOE_SESSIONS=$(( $PPPOE_SESSIONS * 1 ))
+
+IFACE=$1
+CMD=$2
+
+OPT=""
+
+### HEADER ###
+LOCKFILE="/var/lock/pppoe-server.lock"
+LOCKFD=99
+
+# PRIVATE
+_lock()             { flock -$1 -w0 $LOCKFD; }
+_no_more_locking()  { _lock u; _lock xn && rm -f $LOCKFILE; }
+_prepare_locking()  { eval "exec $LOCKFD>\"$LOCKFILE\""; trap _no_more_locking EXIT; }
+
+# PUBLIC
+exlock_now()        { _lock xn; }  # obtain an exclusive lock immediately or fail
+exlock()            { _lock x; }   # obtain an exclusive lock
+shlock()            { _lock s; }   # obtain a shared lock
+unlock()            { _lock u; }   # drop a lock
+
+# Prepare locking
+_prepare_locking
+
+if [[ "$IFACE" == "" ]]; then
+#    echo "You must run the script with the name of interface on which you will start the PPPoE Server"
+    exit 1
+fi
+
+if [[ "$PPPOE_MAX" -lt 1 ]]; then
+    PPPOE_MAX=64
+fi
+
+if [[ "$PPPOE_SESSIONS" -lt 1 ]]; then
+    PPPOE_SESSIONS=64
+fi
+
+TOTAL_SESSIONS=$(( PPPOE_SESSIONS * $PPPOE_MAX ))
+
+build_session_track()
+{
+    #echo $VAR_DIR
+    if [[ ! -d "$VAR_DIR" ]]; then
+        mkdir -p $VAR_DIR
+    fi
+
+    if [[ ! -f "$SES_FILE" ]]; then
+        touch $SES_FILE
+        echo -n > $SES_FILE
+        for i in `seq 0 $PPPOE_SESSIONS $TOTAL_SESSIONS`
+        do
+            echo $i FREE >> $SES_FILE
+        done
+    fi
+}
+
+
+build_pppoe_eviroment()
+{
+    sessid=$1
+    #-k -L 10.245.244.1 -R 10.150.0.1 -N 256 -o 0 -I gi0-2.540
+    ARGS=""
+
+    case $(echo $PPPOE_KERNELMODE | tr a-z A-Z) in
+        YES)
+           # Force kernel mode on. It will fail to start because if is 
+           # not compiled with kernel-mode the option is not available
+           ARGS="-k"
+        ;;
+        NO)
+           # Don't start with kernel-mode
+           ARGS="-F"
+        ;;
+        AUTO)
+            # Find out if the pppoe-server is compiled with kernel-mode
+            if /usr/sbin/pppoe-server -h 2>&1 | grep -q "\-k"; then
+                ARGS="-k"
+            fi
+        ;;
+    esac
+
+    if [[ "$PPPOE_LOCALIP" != "" ]]; then
+        ARGS=$ARGS" -L $PPPOE_LOCALIP"
+    fi
+    if [[ "$PPPOE_REMOTEIP" != "" ]]; then
+        ARGS=$ARGS" -R $PPPOE_REMOTEIP"
+    fi
+    if [[ "$PPPOE_SESSIONS" -gt 0 ]]; then
+        ARGS=$ARGS" -N $PPPOE_SESSIONS"
+    fi
+    ARGS=$ARGS" -o $sessid -I $IFACE"
+    #echo "OPT=\"$ARGS\"" > $VAR_DIR/pppoe-server-$IFACE.env
+    OPT="$ARGS"
+    return 0
+}
+
+start_pppoe()
+{
+    build_session_track
+
+    if grep -q "^[0-9]\+ $IFACE$" $SES_FILE; then
+        echo "ERROR: a session for interface $IFACE is already running"
+        #echo "OPT=\"\" ERRNO=1 ERRMSG=\"ERROR: a session for interface $IFACE is already running\""
+        exit 1
+    fi
+
+    # Using lock file to not override same session in paralel execution
+    retries=0
+    while ! exlock_now && [[ "$retries" -lt 30 ]]
+    do
+        let retries++
+	echo $retries
+        sleep 0.5
+    done
+
+    if [[ $retries -ge 30 ]]; then
+        echo "ERROR: the lock file $LOCKFILE is not free. It should be freed after a script exits or unlocks it."
+        exit 1
+    fi
+
+    FREEFOUND=0
+    while read sessid usage
+    do
+        if [[ "$usage" == "FREE" ]]; then
+            echo "INFO: Session ID $sessid allocated to $IFACE"
+            sed -i "s/^\($sessid\) FREE/\1 $IFACE/g" $SES_FILE
+            FREEFOUND=1
+            break
+        fi
+    done < $SES_FILE
+
+    # remove lock
+    unlock
+
+    if [[ "$FREEFOUND" -gt 0 ]]; then
+        build_pppoe_eviroment $sessid
+        exec /usr/sbin/pppoe-server -F $OPT
+    else
+        echo "OPT=\"\" ERRNO=2 ERRMSG=\"ERROR: no free session found for interface $IFACE\""
+    fi
+    return 0
+    #return $sessid
+}
+
+stop_pppoe()
+{
+    # If the file is not found, try to kill the process by searching by interface
+#    if [[ ! -f "$SES_FILE" ]]; then
+#        for i in `pidof /usr/sbin/pppoe-server`; do
+#            
+#        done
+#    else
+#
+#    fi
+
+# Free the session
+    sed -i "s/^\([0-9]\+\) $IFACE$/\1 FREE/g" $SES_FILE
+}
+
+
+case "$CMD" in
+    start)
+        start_pppoe
+        ;;
+    stop)
+        stop_pppoe
+        ;;
+    *)
+        #echo "Usage: $0 [IFACE] (start|stop)"
+        ;;
+esac
+
+
+exit 0
+

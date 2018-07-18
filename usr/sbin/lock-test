@@ -1,0 +1,52 @@
+#!/bin/bash
+
+
+#   This script is creating a file to keep the sessions of PPPoE
+#   First if /var/run/pppoe-server/ folder doens't exist will
+# create it and then will create a file pppoe-server.ses file.
+#   The script will generate the list of sessions taking in account
+# the maximum sessions per daemon.
+#   The will generate an eviroment file for each interface before
+#  pppoe-server.service starts the daemon.
+
+. /etc/default/pppoe-server
+
+VAR_DIR="/var/run/pppoe-server"
+SES_FILE="$VAR_DIR/pppoe-server.ses"
+
+PPPOE_NUM=$(( $PPPOE_NUM * 1 ))
+PPPOE_SESSIONS=$(( $PPPOE_SESSIONS * 1 ))
+
+IFACE=$1
+CMD=$2
+
+OPT=""
+
+### HEADER ###
+
+LOCKFILE="/var/lock/pppoe-server.lock"
+LOCKFD=99
+
+# PRIVATE
+_lock()             { flock -$1 -w0 $LOCKFD; }
+_no_more_locking()  { _lock u; _lock xn && rm -f $LOCKFILE; }
+_prepare_locking()  { eval "exec $LOCKFD>\"$LOCKFILE\""; trap _no_more_locking EXIT; }
+#_prepare_locking()  { eval "exec $LOCKFD>\"$LOCKFILE\""; }
+
+# PUBLIC
+exlock_now()        { _lock xn; }  # obtain an exclusive lock immediately or fail
+exlock()            { _lock x; }   # obtain an exclusive lock
+shlock()            { _lock s; }   # obtain a shared lock
+unlock()            { _lock u; }   # drop a lock
+
+_prepare_locking
+
+if exlock; then
+    echo "Lock success"
+else
+    echo "Lock unsuccess"
+fi
+
+sleep 100
+exit
+
