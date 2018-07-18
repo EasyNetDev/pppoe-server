@@ -44,15 +44,15 @@ if [[ "$IFACE" == "" ]]; then
     exit 1
 fi
 
-if [[ "$PPPOE_MAX" -lt 1 ]]; then
-    PPPOE_MAX=64
+if [[ "$PPPOE_NUM" -lt 1 ]]; then
+    PPPOE_NUM=64
 fi
 
 if [[ "$PPPOE_SESSIONS" -lt 1 ]]; then
     PPPOE_SESSIONS=64
 fi
 
-TOTAL_SESSIONS=$(( PPPOE_SESSIONS * $PPPOE_MAX ))
+TOTAL_SESSIONS=$(( PPPOE_SESSIONS * $PPPOE_NUM ))
 
 build_session_track()
 {
